@@ -2,7 +2,7 @@ import bentoml
 import pandas as pd
 from bentoml.io import JSON
 
-runner = bentoml.sklearn.get("weather_predictor:latest").to_runner()
+runner = bentoml.picklable_model.get("weather_predictor:latest").to_runner()
 svc = bentoml.Service("weather_prediction_service", runners=[runner])
 
 @svc.api(input=JSON(), output=JSON())
