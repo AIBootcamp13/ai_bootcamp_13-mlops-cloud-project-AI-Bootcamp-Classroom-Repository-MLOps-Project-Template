@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>서울 날씨 예측</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 2em;
+            font-weight: 300;
+            white-space: nowrap;
+        }
+
+        .weather-card {
+            background: linear-gradient(135deg, #74b9ff 0%, #0984e3 100%);
+            border-radius: 15px;
+            padding: 30px;
+            margin: 20px 0;
+            color: white;
+            box-shadow: 0 10px 20px rgba(116, 185, 255, 0.3);
+        }
+
+        .date-info {
+            font-size: 1.2em;
+            margin-bottom: 20px;
+            opacity: 0.9;
+        }
+
+        .weather-info {
+            display: flex;
+            justify-content: space-between;
+            margin: 20px 0;
+        }
+
+        .weather-item {
+            flex: 1;
+            padding: 0 10px;
+        }
+
+        .weather-value {
+            font-size: 3em;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .weather-label {
+            font-size: 1.1em;
+            opacity: 0.8;
+        }
+
+        .weather-unit {
+            font-size: 0.6em;
+            opacity: 0.8;
+        }
+
+        .predict-btn {
+            background: linear-gradient(135deg, #fd79a8 0%, #fdcb6e 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 25px;
+            font-size: 1.2em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(253, 121, 168, 0.3);
+        }
+
+        .predict-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 7px 20px rgba(253, 121, 168, 0.4);
+        }
+
+        .predict-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .loading {
+            display: none;
+            margin: 20px 0;
+        }
+
+        .loading-spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #3498db;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error {
+            background: #e74c3c;
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            display: none;
+        }
+
+        .message {
+            margin-top: 20px;
+            font-size: 1.1em;
+            font-weight: 500;
+            color: white;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 15px;
+            border-radius: 10px;
+        }
+
+        .weather-image {
+            max-height: 150px;
+            height: auto;
+            width: auto;
+            display: block;
+            margin: 20px auto 0;
+        }
+
+        .toggle-container {
+            margin-top: 20px;
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .toggle-container input[type="checkbox"] {
+            width: 50px;
+            height: 26px;
+            appearance: none;
+            background: #ccc;
+            outline: none;
+            border-radius: 50px;
+            position: relative;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        .toggle-container input[type="checkbox"]:checked {
+            background: #4cd964;
+        }
+
+        .toggle-container input[type="checkbox"]::before {
+            content: "";
+            position: absolute;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            top: 2px;
+            left: 2px;
+            background: white;
+            transition: transform 0.3s ease;
+        }
+
+        .toggle-container input[type="checkbox"]:checked::before {
+            transform: translateX(24px);
+        }
+
+        @media (max-width: 600px) {
+$1
+$2
+.weather-image {
+    max-height: 75px;
+    height: auto;
+    width: auto;
+    display: block;
+    margin: 20px auto 0;
+}
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🌤️ 서울 날씨 예측</h1>
+
+        <button class="predict-btn" onclick="getPrediction()">
+            내일 날씨 예측하기
+        </button>
+
+        <div class="loading" id="loading">
+            <div class="loading-spinner"></div>
+            <p>예측 중...</p>
+        </div>
+
+        <div class="error" id="error"></div>
+
+        <div class="weather-card" id="weather-card" style="display: none;">
+            <div class="date-info" id="date-info"></div>
+
+            <div class="weather-info">
+                <div class="weather-item">
+                    <div class="weather-value" id="temperature">
+                        --<span class="weather-unit">°C</span>
+                    </div>
+                    <div class="weather-label">기온</div>
+                </div>
+                <div class="weather-item">
+                    <div class="weather-value" id="humidity">
+                        --<span class="weather-unit">%</span>
+                    </div>
+                    <div class="weather-label">습도</div>
+                </div>
+            </div>
+
+            <img id="weather-image" class="weather-image" src="" alt="날씨 상태 이미지" style="display:none;">
+        </div>
+
+        <div class="toggle-container">
+            <label for="simulateToggle">물이 필요한 기상 재연하기</label>
+            <input type="checkbox" id="simulateToggle">
+        </div>
+    </div>
+
+    <script>
+        let latestData = null;
+        let originalTemp = null;
+        let originalHumidity = null;
+
+        async function getPrediction() {
+            const button = document.querySelector('.predict-btn');
+            const loading = document.getElementById('loading');
+            const error = document.getElementById('error');
+            const weatherCard = document.getElementById('weather-card');
+            const simulateToggle = document.getElementById('simulateToggle');
+
+            button.disabled = true;
+            loading.style.display = 'block';
+            error.style.display = 'none';
+            weatherCard.style.display = 'none';
+
+            try {
+                const response = await fetch('http://localhost:8000/predict');
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                const data = await response.json();
+                latestData = data;
+                originalTemp = data.temperature;
+                originalHumidity = data.humidity;
+                displayPrediction(data);
+            } catch (err) {
+                error.textContent = `예측을 가져오는데 실패했습니다: ${err.message}`;
+                error.style.display = 'block';
+            } finally {
+                loading.style.display = 'none';
+                button.disabled = false;
+            }
+        }
+
+        function displayPrediction(data, simulateBad = false) {
+            const weatherCard = document.getElementById('weather-card');
+            const dateInfo = document.getElementById('date-info');
+            const temperature = document.getElementById('temperature');
+            const humidity = document.getElementById('humidity');
+            const weatherImage = document.getElementById('weather-image');
+
+
+            const displayData = { ...data };
+
+            if (simulateBad) {
+                if (data.temperature < 30) {
+                    displayData.temperature = 31;
+                } else {
+                    displayData.humidity = 29;
+                }
+            } else {
+                displayData.temperature = originalTemp;
+                displayData.humidity = originalHumidity;
+            }
+
+            const forecastDate = new Date(displayData.forecast_date);
+            dateInfo.textContent = `${forecastDate.toLocaleDateString('ko-KR', {
+                year: 'numeric', month: 'long', day: 'numeric', weekday: 'long'
+            })} 예보`;
+
+            temperature.innerHTML = `${displayData.temperature}<span class="weather-unit">°C</span>`;
+            humidity.innerHTML = `${displayData.humidity}<span class="weather-unit">%</span>`;
+
+            const needsWater = displayData.temperature >= 30 || displayData.humidity <= 30;
+            weatherCard.style.background = needsWater ? 'linear-gradient(to bottom, rgba(200,30,30,0.95), rgba(200,30,30,0.1))' : 'linear-gradient(135deg, #74b9ff 0%, #0984e3 100%)';
+            weatherImage.src = needsWater ? '/static/water_please.png' : '/static/happy_plant.png';
+            weatherImage.style.display = 'block';
+
+            weatherCard.style.display = 'block';
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            setTimeout(getPrediction, 1000);
+            const toggle = document.getElementById('simulateToggle');
+            toggle.addEventListener('change', () => {
+                if (latestData) displayPrediction(latestData, toggle.checked);
+            });
+        });
+
+        document.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') getPrediction();
+        });
+    </script>
+</body>
