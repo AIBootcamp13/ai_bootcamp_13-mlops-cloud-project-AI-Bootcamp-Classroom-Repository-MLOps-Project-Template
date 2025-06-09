@@ -1,0 +1,19 @@
+# 기본 이미지로 python 3.11 을 사용
+FROM python:3.11-buster
+
+# 한글 글꼴 설치
+RUN apt-get update && apt-get install -y fonts-nanum*
+
+WORKDIR /root
+
+COPY ../src /root/src
+COPY ../requirements.txt ./requirements.txt
+COPY ../.env ./.env
+
+RUN pip install --no-cache-dir -r requirements.txt
+
+# 컨테이너 포트 포워딩
+EXPOSE 8080
+
+# 컨테이너 실행 시 unicorn 으로 Flask 앱 실행
+ENTRYPOINT ["python", "src/app.py"]

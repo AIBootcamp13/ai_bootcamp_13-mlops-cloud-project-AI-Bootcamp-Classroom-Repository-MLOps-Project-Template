@@ -94,14 +94,15 @@ def download_umdCd():
         with open(data_path, 'wb') as f:
             f.write(response.content)
         # print("[Success] download umdCd.xls")
-    except Except as e:
+    except Exception as e:
         # print("[Error] fail to download umdCd.xls .", e)
         return None
     return data_path
 
 def get_umdCd(data_path=None):
     if data_path is None:
-        data_path = os.path.join(project_path(), 'src', 'data', 'umdCd.xls')
+        data_path = os.getenv("S3_URL_UMDCD")
+    
     umdcd = pd.read_excel(data_path, header=0)
 
     code = dict()
@@ -111,11 +112,13 @@ def get_umdCd(data_path=None):
         code[row['법정동코드']] = row['법정동명']
     return code
 
-def correct_lat_lon(lon, lat):
+def correct_lat_lon(X, Y):
     """
     위도(lat)와 경도(lon)를 입력받아, 한국 범위를 기준으로
     위경도가 뒤바뀌었는지 판단하고, 올바른 순서로 반환합니다.
     """
+    lat = Y
+    lon = X
     # 위도와 경도 범위 (한국 기준)
     is_lat_valid = 32 <= lat <= 45
     is_lon_valid = 123 <= lon <= 133
@@ -313,6 +316,9 @@ def get_location_dataframe(apt_unique, num_workers=1):
     for idx, x, y in results:
         location_df.loc[idx, 'X'] = x
         location_df.loc[idx, 'Y'] = y
+
+    return location_df
+
 
 def save_location_s3(df):
     try:
